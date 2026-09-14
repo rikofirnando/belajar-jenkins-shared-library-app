@@ -172,22 +172,27 @@ pipeline {
             agent {
                 label 'jenkins-agent-01'
             }
-            
+
             input {
-                message "Are you sure to proceed to the deploy stage?"
-                ok "Yes, continue"
-            }
+                message 'Are you sure to proceed to the deploy stage?'
+                ok 'Yes, continue'
 
-            parameters {
-                string(name: 'TARGET_ENV', defaultValue: 'dev', choices: ['dev', 'staging', 'prod'], description: 'Environment untuk deploy')
+                parameters {
+                    choice(
+                        name: 'TARGET_ENV',
+                        choices: ['dev', 'staging', 'prod'],
+                        description: 'Environment untuk deploy'
+                    )
+                }
             }
-
 
             steps {
-                echo "Target environment for deploy: ${params.TARGET_ENV}"
+                echo "Target environment for deploy: ${env.TARGET_ENV}"
                 echo "Deploy dijalankan pada node: ${env.NODE_NAME}"
                 echo 'Start deploying...'
+
                 sleep 2
+
                 echo 'Deploy completed...'
             }
         }
