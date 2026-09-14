@@ -169,6 +169,10 @@ pipeline {
         }
 
         stage('Deploy') {
+            agent {
+                label 'jenkins-agent-01'
+            }
+            
             input {
                 message "Are you sure to proceed to the deploy stage?"
                 ok "Yes, continue"
@@ -178,9 +182,6 @@ pipeline {
                 string(name: 'TARGET_ENV', defaultValue: 'dev', choices: ['dev', 'staging', 'prod'], description: 'Environment untuk deploy')
             }
 
-            agent {
-                label 'jenkins-agent-01'
-            }
 
             steps {
                 echo "Target environment for deploy: ${params.TARGET_ENV}"
