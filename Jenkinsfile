@@ -169,11 +169,21 @@ pipeline {
         }
 
         stage('Deploy') {
+            input {
+                message "Are you sure to proceed to the deploy stage?"
+                ok "Yes, continue"
+            }
+
+            parameters {
+                string(name: 'TARGET_ENV', defaultValue: 'dev', choices: ['dev', 'staging', 'prod'], description: 'Environment untuk deploy')
+            }
+
             agent {
                 label 'jenkins-agent-01'
             }
 
             steps {
+                echo "Target environment for deploy: ${params.TARGET_ENV}"
                 echo "Deploy dijalankan pada node: ${env.NODE_NAME}"
                 echo 'Start deploying...'
                 sleep 2
@@ -188,6 +198,7 @@ pipeline {
 
             steps {
                 echo "Release dijalankan pada node: ${env.NODE_NAME}"
+                echo "Target environment for release: ${params.TARGET_ENV}"
                 echo 'Start releasing...'
                 sleep 2
                 echo 'Release completed...'
@@ -201,6 +212,7 @@ pipeline {
 
             steps {
                 echo "Cleanup dijalankan pada node: ${env.NODE_NAME}"
+                echo "Target environment for cleanup: ${params.TARGET_ENV}"
                 echo 'Cleaning up 1...'
                 echo 'Cleaning up 2...'
             }
