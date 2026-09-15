@@ -228,6 +228,33 @@ pipeline {
                 echo 'Cleaning up 2...'
             }
         }
+
+        // Materi baru: beberapa stage anak berjalan berurutan.
+        stage('Sequential Stages') {
+            agent {
+                label 'jenkins-agent-01'
+            }
+
+            stages {
+                stage('Sequential 1 - Persiapan') {
+                    steps {
+                        echo "Langkah 1: Persiapan pada node ${env.NODE_NAME}"
+                    }
+                }
+
+                stage('Sequential 2 - Verifikasi') {
+                    steps {
+                        echo "Langkah 2: Verifikasi pada node ${env.NODE_NAME}"
+                    }
+                }
+
+                stage('Sequential 3 - Selesai') {
+                    steps {
+                        echo "Langkah 3: Selesai pada node ${env.NODE_NAME}"
+                    }
+                }
+            }
+        }
     }
 
     post {
