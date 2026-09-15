@@ -199,7 +199,7 @@ pipeline {
 
         stage('Release') {
             when {
-                before agent true
+                beforeAgent true
                 expression { return params.DEPLOY == true }
             }
 
