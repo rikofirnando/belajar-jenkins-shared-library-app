@@ -200,9 +200,9 @@ pipeline {
         stage('Release') {
             when {
                 before agent true
-                expression { return params.DEPLOY }
+                expression { return params.DEPLOY == true }
             }
-            
+
             agent {
                 label 'jenkins-agent-01'
             }
