@@ -255,7 +255,6 @@ pipeline {
                 }
             }
         }
-    }
 
         // Materi baru: beberapa stage dijalankan secara bersamaan.
         stage('Parallel Stages') {
@@ -313,6 +312,8 @@ pipeline {
                 }
             }
         }
+
+    }
 
     post {
         always {
