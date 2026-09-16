@@ -257,6 +257,63 @@ pipeline {
         }
     }
 
+        // Materi baru: beberapa stage dijalankan secara bersamaan.
+        stage('Parallel Stages') {
+            failFast true
+
+            parallel {
+                stage('Parallel 1 - Prepare Java') {
+                    agent {
+                        label 'jenkins-agent-01'
+                    }
+
+                    steps {
+                        echo "Prepare Java dijalankan pada node: ${env.NODE_NAME}"
+                        echo 'Memulai pengecekan Java...'
+                        sh '"$JAVA_HOME/bin/java" -version'
+                        sleep 5
+                        echo 'Prepare Java selesai'
+                    }
+                }
+
+                stage('Parallel 2 - Prepare Maven') {
+                    agent {
+                        label 'jenkins-agent-01'
+                    }
+
+                    steps {
+                        echo "Prepare Maven dijalankan pada node: ${env.NODE_NAME}"
+                        echo 'Memulai pengecekan Maven Wrapper...'
+                        sh '''
+                            chmod +x mvnw
+                            ./mvnw -version
+                        '''
+                        sleep 5
+                        echo 'Prepare Maven selesai'
+                    }
+                }
+
+                stage('Parallel 3 - Check Project') {
+                    agent {
+                        label 'jenkins-agent-01'
+                    }
+
+                    steps {
+                        echo "Check Project dijalankan pada node: ${env.NODE_NAME}"
+
+                        script {
+                            echo "pom.xml tersedia   : ${fileExists('pom.xml')}"
+                            echo "mvnw tersedia      : ${fileExists('mvnw')}"
+                            echo "data.json tersedia : ${fileExists('data.json')}"
+                        }
+
+                        sleep 5
+                        echo 'Check Project selesai'
+                    }
+                }
+            }
+        }
+
     post {
         always {
             echo 'This will always run'
