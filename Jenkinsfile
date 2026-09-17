@@ -312,36 +312,36 @@ pipeline {
                 }
             }
         }
-    }
 
-    stage('Matrix Testing') {
-        matrix {
-            axes {
-                axis {
-                    name 'MATRIX_ENV'
-                    values 'dev', 'staging'
-                }
+        stage('Matrix Testing') {
+            matrix {
+                axes {
+                    axis {
+                        name 'MATRIX_ENV'
+                        values 'dev', 'staging'
+                    }
 
-                axis {
-                    name 'TEST_TYPE'
-                    values 'unit', 'api'
-                }
-            }
-
-            agent {
-                label 'jenkins-agent-01'
-            }
-
-            stages {
-                stage('Preparation') {
-                    steps {
-                        echo 'Melakukan persiapan'
+                    axis {
+                        name 'TEST_TYPE'
+                        values 'unit', 'api'
                     }
                 }
 
-                stage('Execution') {
-                    steps {
-                        echo 'Menjalankan pengujian'
+                agent {
+                    label 'jenkins-agent-01'
+                }
+
+                stages {
+                    stage('Preparation') {
+                        steps {
+                            echo 'Melakukan persiapan'
+                        }
+                    }
+
+                    stage('Execution') {
+                        steps {
+                            echo 'Menjalankan pengujian'
+                        }
                     }
                 }
             }
