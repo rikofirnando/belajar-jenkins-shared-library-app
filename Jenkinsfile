@@ -2,10 +2,10 @@ pipeline {
     agent none
 
     environment {
-        AUTHOR = "Riko Firnando 2"
-        EMAIL = "riko.firnando@example.com"
-        WEB = "https://www.example.com"
-        PHONE = "+62 812-3456-7890"
+        AUTHOR = 'Riko Firnando 2'
+        EMAIL = 'riko.firnando@example.com'
+        WEB = 'https://www.example.com'
+        PHONE = '+62 812-3456-7890'
         JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
     }
 
@@ -51,7 +51,7 @@ pipeline {
             }
 
             environment {
-                APP = credentials("riko_rahasia")
+                APP = credentials('riko_rahasia')
             }
 
             steps {
@@ -312,7 +312,40 @@ pipeline {
                 }
             }
         }
+    }
 
+    stage('Matrix Testing') {
+        matrix {
+            axes {
+                axis {
+                    name 'MATRIX_ENV'
+                    values 'dev', 'staging'
+                }
+
+                axis {
+                    name 'TEST_TYPE'
+                    values 'unit', 'api'
+                }
+            }
+
+            agent {
+                label 'jenkins-agent-01'
+            }
+
+            stages {
+                stage('Preparation') {
+                    steps {
+                        echo 'Melakukan persiapan'
+                    }
+                }
+
+                stage('Execution') {
+                    steps {
+                        echo 'Menjalankan pengujian'
+                    }
+                }
+            }
+        }
     }
 
     post {
