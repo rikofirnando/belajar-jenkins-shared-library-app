@@ -348,6 +348,40 @@ pipeline {
         }
     }
 
+    stage('Simple Matrix Test') {
+        matrix {
+            axes {
+                axis {
+                    name 'TEST_TYPE'
+                    values 'unit', 'integration', 'api'
+                }
+            }
+
+            agent {
+                label 'jenkins-agent-01'
+            }
+
+            stages {
+                stage('Show Matrix Cell') {
+                    steps {
+                        echo '========================================'
+                        echo "Jenis test : ${TEST_TYPE}"
+                        echo "Node       : ${env.NODE_NAME}"
+                        echo "Workspace  : ${env.WORKSPACE}"
+                        echo '========================================'
+                    }
+                }
+
+                stage('Run Test') {
+                    steps {
+                        echo "Menjalankan ${TEST_TYPE} test..."
+                        sleep 2
+                    }
+                }
+            }
+        }
+    }
+
     post {
         always {
             echo 'This will always run'
