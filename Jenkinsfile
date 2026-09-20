@@ -380,75 +380,75 @@ pipeline {
                 }
             }
         }
-    }
 
-    stage('Matrix Test') {
-        matrix {
-            axes {
-                axis {
-                    name 'TEST_TYPE'
-                    values 'unit', 'api'
-                }
+        stage('Matrix Test') {
+            matrix {
+                axes {
+                    axis {
+                        name 'TEST_TYPE'
+                        values 'unit', 'api'
+                    }
 
-                axis {
-                    name 'JAVA_VERSION'
-                    values '11', '17'
-                }
-            }
-
-            agent {
-                label 'jenkins-agent-01'
-            }
-
-            stages {
-                stage('Show Configuration') {
-                    steps {
-                        echo '========================================'
-                        echo "Test Type    : ${TEST_TYPE}"
-                        echo "Java Version : ${JAVA_VERSION}"
-                        echo "Node         : ${env.NODE_NAME}"
-                        echo '========================================'
+                    axis {
+                        name 'JAVA_VERSION'
+                        values '11', '17'
                     }
                 }
 
-                stage('Execute Test') {
-                    steps {
-                        echo "Menjalankan ${TEST_TYPE} menggunakan Java ${JAVA_VERSION}"
+                agent {
+                    label 'jenkins-agent-01'
+                }
+
+                stages {
+                    stage('Show Configuration') {
+                        steps {
+                            echo '========================================'
+                            echo "Test Type    : ${TEST_TYPE}"
+                            echo "Java Version : ${JAVA_VERSION}"
+                            echo "Node         : ${env.NODE_NAME}"
+                            echo '========================================'
+                        }
+                    }
+
+                    stage('Execute Test') {
+                        steps {
+                            echo "Menjalankan ${TEST_TYPE} menggunakan Java ${JAVA_VERSION}"
+                        }
                     }
                 }
             }
         }
-    }
 
-    stage('Matrix Build') {
-        matrix {
-            axes {
-                axis {
-                    name 'TEST_TYPE'
-                    values 'unit', 'api'
-                }
-            }
-
-            agent {
-                label 'jenkins-agent-01'
-            }
-
-            stages {
-                stage('Preparation') {
-                    steps {
-                        echo "Persiapan ${TEST_TYPE}"
+        stage('Matrix Build') {
+            matrix {
+                axes {
+                    axis {
+                        name 'TEST_TYPE'
+                        values 'unit', 'api'
                     }
                 }
 
-                stage('Testing') {
-                    steps {
-                        echo "Menjalankan ${TEST_TYPE}"
-                    }
+                agent {
+                    label 'jenkins-agent-01'
                 }
 
-                stage('Report') {
-                    steps {
-                        echo "Membuat laporan ${TEST_TYPE}"
+                stages {
+                    stage('Preparation') {
+                        steps {
+                            echo "Persiapan ${TEST_TYPE}"
+                        }
+                    }
+
+                    stage('Testing') {
+                        steps {
+                            echo "Menjalankan ${TEST_TYPE}"
+                        }
+                    }
+
+                    stage('Report') {
+                        steps {
+                            echo "Membuat laporan ${TEST_TYPE}"
+                        }
                     }
                 }
             }
