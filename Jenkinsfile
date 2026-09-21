@@ -67,7 +67,9 @@ pipeline {
                     echo("App User   : ${APP_USR}")
                     echo("App Password : ${APP_PSW}")
 
-                    sh('echo "App Password : ${APP_PSW}" > "rahasia.txt"')
+                    sh '''
+                        echo "App Password : $APP_PSW" > "rahasia.txt"
+                    '''
 
                     echo "Start Job     : ${env.JOB_NAME}"
                     echo "Build Number  : ${env.BUILD_NUMBER}"
@@ -226,6 +228,33 @@ pipeline {
                 echo "Target environment for cleanup: ${params.TARGET_ENV}"
                 echo 'Cleaning up 1...'
                 echo 'Cleaning up 2...'
+            }
+        }
+
+        stage('Release v2') {
+            when {
+                beforeAgent true
+                expression { return params.DEPLOY == true }
+            }
+
+            agent {
+                label 'jenkins-agent-01'
+            }
+
+            steps {
+                withCredentials([usernamePassword(
+            credentialsId: 'eko_rahasia',
+            usernameVariable: 'RELEASE_USER',
+            passwordVariable: 'RELEASE_PASSWORD'
+        )]) {
+                    sh '''
+                set +x
+
+                echo "Credentials berhasil dimuat"
+                echo "Username dan password siap digunakan"
+                echo "Simulasi release selesai"
+            '''
+        }
             }
         }
 
