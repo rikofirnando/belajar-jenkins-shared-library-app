@@ -16,6 +16,9 @@ pipeline {
 
         // PATH tidak dioverride. Agent memakai PATH bawaan sistem yang
         // sebelumnya sudah berhasil menjalankan step `sh`.
+
+        UNSAFE_APP_USER     = 'demo-user'
+        UNSAFE_APP_PASSWORD = 'demo-password'
     }
 
     // Pemicu otomatis pipeline.
@@ -148,6 +151,18 @@ pipeline {
                         echo "Credential berhasil dimuat dengan aman"
                     '''
                 }
+
+                echo 'Contoh credential tidak aman:'
+                echo "Username : ${env.UNSAFE_APP_USER}"
+                echo "Password : ${env.UNSAFE_APP_PASSWORD}"
+
+                sh '''
+                    echo "Username: $UNSAFE_APP_USER" > rahasia.txt
+                    echo "Password: $UNSAFE_APP_PASSWORD" >> rahasia.txt
+
+                    echo "Isi file rahasia.txt:"
+                    cat rahasia.txt
+                '''
             }
         }
 
