@@ -134,6 +134,56 @@ pipeline {
             }
         }
 
+        // 2.1. Menampilkan variabel khusus dari Multibranch Pipeline.
+        // BRANCH_NAME otomatis disediakan Jenkins pada job Multibranch.
+        stage('2.1 - Multibranch Information') {
+            when {
+                beforeAgent true
+                expression { env.BRANCH_NAME?.trim() }
+            }
+
+            agent { label 'jenkins-agent-01' }
+
+            steps {
+                echo '========================================'
+                echo 'INFORMASI MULTIBRANCH PIPELINE'
+                echo '========================================'
+                echo "Job Name      : ${env.JOB_NAME}"
+                echo "Build Number  : ${env.BUILD_NUMBER}"
+                echo "Branch Name   : ${env.BRANCH_NAME}"
+                echo "Git Branch    : ${env.GIT_BRANCH ?: 'Belum tersedia'}"
+                echo "Git Commit    : ${env.GIT_COMMIT ?: 'Belum tersedia'}"
+                echo "Node          : ${env.NODE_NAME}"
+                echo "Workspace     : ${env.WORKSPACE}"
+                echo '========================================'
+            }
+        }
+
+        // 2.2. Memastikan source code pada branch mempunyai file Maven.
+        stage('2.2 - Check Multibranch Project') {
+            when {
+                beforeAgent true
+                expression { env.BRANCH_NAME?.trim() }
+            }
+
+            agent { label 'jenkins-agent-01' }
+
+            steps {
+                sh '''
+                    echo "Branch dari Jenkins: $BRANCH_NAME"
+                    echo "Hostname: $(hostname)"
+                    echo "User: $(whoami)"
+                    echo "Directory: $(pwd)"
+
+                    test -f pom.xml
+                    test -f mvnw
+
+                    chmod +x mvnw
+                    ./mvnw -version
+                '''
+            }
+        }
+
         // 3. Contoh penggunaan credential bertipe Username with password.
         stage('3 - Check Credentials') {
             agent { label 'jenkins-agent-01' }
@@ -388,15 +438,16 @@ pipeline {
     // Aksi penutup berdasarkan hasil pipeline.
     post {
         always {
+            echo "Branch: ${env.BRANCH_NAME ?: env.GIT_BRANCH ?: 'Tidak tersedia'}"
             echo "Status akhir: ${currentBuild.currentResult}"
         }
 
         success {
-            echo 'Pipeline berhasil'
+            echo "Pipeline branch ${env.BRANCH_NAME ?: 'SCM biasa'} berhasil"
         }
 
         failure {
-            echo 'Pipeline gagal'
+            echo "Pipeline branch ${env.BRANCH_NAME ?: 'SCM biasa'} gagal"
         }
 
         aborted {
