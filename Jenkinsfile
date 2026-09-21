@@ -218,25 +218,7 @@ pipeline {
             }
         }
 
-        stage('Cleanup') {
-            agent {
-                label 'jenkins-agent-01'
-            }
-
-            steps {
-                echo "Cleanup dijalankan pada node: ${env.NODE_NAME}"
-                echo "Target environment for cleanup: ${params.TARGET_ENV}"
-                echo 'Cleaning up 1...'
-                echo 'Cleaning up 2...'
-            }
-        }
-
         stage('Release v2') {
-            when {
-                beforeAgent true
-                expression { return params.DEPLOY == true }
-            }
-
             agent {
                 label 'jenkins-agent-01'
             }
@@ -255,6 +237,19 @@ pipeline {
                 echo "Simulasi release selesai"
             '''
         }
+            }
+        }
+
+        stage('Cleanup') {
+            agent {
+                label 'jenkins-agent-01'
+            }
+
+            steps {
+                echo "Cleanup dijalankan pada node: ${env.NODE_NAME}"
+                echo "Target environment for cleanup: ${params.TARGET_ENV}"
+                echo 'Cleaning up 1...'
+                echo 'Cleaning up 2...'
             }
         }
 
