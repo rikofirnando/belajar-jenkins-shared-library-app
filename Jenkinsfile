@@ -453,6 +453,58 @@ pipeline {
                 }
             }
         }
+
+    stage('Matrix Test') {
+        matrix {
+            axes {
+                axis {
+                    name 'TEST_TYPE'
+                    values 'unit', 'integration', 'api'
+                }
+
+                axis {
+                    name 'TARGET_ENV'
+                    values 'dev', 'staging'
+                }
+            }
+
+            excludes {
+                exclude {
+                    axis {
+                        name 'TEST_TYPE'
+                        values 'integration'
+                    }
+
+                    axis {
+                        name 'TARGET_ENV'
+                        values 'dev'
+                    }
+                }
+            }
+
+            agent {
+                label 'jenkins-agent-01'
+            }
+
+            stages {
+                stage('Show Matrix Cell') {
+                    steps {
+                        echo '========================================'
+                        echo "Jenis Test  : ${TEST_TYPE}"
+                        echo "Environment : ${TARGET_ENV}"
+                        echo "Node        : ${env.NODE_NAME}"
+                        echo '========================================'
+                    }
+                }
+
+                stage('Run Test') {
+                    steps {
+                        echo "Menjalankan ${TEST_TYPE} test pada ${TARGET_ENV}"
+                        sleep 2
+                    }
+                }
+            }
+        }
     }
 
     post {
