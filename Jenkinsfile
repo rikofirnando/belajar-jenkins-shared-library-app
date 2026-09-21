@@ -14,8 +14,8 @@ pipeline {
         PHONE     = '+62 812-3456-7890'
         JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
 
-        // Menambahkan Java ke PATH tanpa menghapus PATH bawaan agent.
-        PATH = "${JAVA_HOME}/bin:${env.PATH}"
+        // PATH tidak dioverride. Agent memakai PATH bawaan sistem yang
+        // sebelumnya sudah berhasil menjalankan step `sh`.
     }
 
     // Pemicu otomatis pipeline.
@@ -109,20 +109,20 @@ pipeline {
                     echo '========================================'
                 }
 
-                // Menjalankan pemeriksaan langsung pada shell agent.
+                // Pola shell sama seperti versi awal yang sebelumnya berhasil.
+                // Java memakai path absolut sehingga PATH global tidak perlu diubah.
                 sh '''
-                    set -eu
-
                     echo "Checking agent, Java, and Maven..."
                     hostname
                     whoami
                     pwd
 
-                    test -f pom.xml
-                    test -f mvnw
+                    echo "JAVA_HOME=$JAVA_HOME"
+                    echo "PATH=$PATH"
+
                     chmod +x mvnw
 
-                    java -version
+                    "$JAVA_HOME/bin/java" -version
                     ./mvnw -version
                 '''
             }
