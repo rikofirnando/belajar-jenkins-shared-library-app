@@ -1,149 +1,173 @@
+// Jenkinsfile Declarative Pipeline
+// Tujuan: contoh pipeline pembelajaran yang rapi, aman, dan berurutan.
+
 pipeline {
+    // Tidak mengunci satu agent untuk seluruh pipeline.
+    // Setiap stage menentukan agent-nya sendiri agar mudah dipelajari.
     agent none
 
+    // Variabel global yang dapat digunakan oleh seluruh stage.
     environment {
-        AUTHOR = 'Riko Firnando 2'
-        EMAIL = 'riko.firnando@example.com'
-        WEB = 'https://www.example.com'
-        PHONE = '+62 812-3456-7890'
+        AUTHOR    = 'Riko Firnando'
+        EMAIL     = 'riko.firnando@example.com'
+        WEB       = 'https://www.example.com'
+        PHONE     = '+62 812-3456-7890'
         JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
+
+        // Menambahkan Java ke PATH tanpa menghapus PATH bawaan agent.
+        PATH = "${JAVA_HOME}/bin:${env.PATH}"
     }
 
+    // Pemicu otomatis pipeline.
     triggers {
-        // cron('* * * * *')
-        // pollSCM('* * * * *')
-        upstream(upstreamProjects: 'job1, job2', threshold: hudson.model.Result.SUCCESS)
+        // Aktifkan salah satu jika dibutuhkan:
+        // cron('H * * * *')
+        // pollSCM('H/5 * * * *')
+
+        // Pipeline berjalan setelah job1 atau job2 sukses.
+        upstream(
+            upstreamProjects: 'job1, job2',
+            threshold: hudson.model.Result.SUCCESS
+        )
     }
 
+    // Form parameter yang muncul saat memilih "Build with Parameters".
     parameters {
-        string(name: 'NAME', defaultValue: 'Guest', description: 'What is your name?')
-        text(name: 'DESCRIPTION', defaultValue: '', description: 'Tell me about yourself')
-        booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Do you need to deploy now?')
-        choice(name: 'ENVIRONMENT', choices: ['dev', 'qa / staging', 'prod'], description: 'Select the environment?')
-        password(name: 'SECRET', defaultValue: '', description: 'Encrypt your key')
+        string(
+            name: 'NAME',
+            defaultValue: 'Guest',
+            description: 'Nama pengguna'
+        )
+        text(
+            name: 'DESCRIPTION',
+            defaultValue: '',
+            description: 'Deskripsi singkat'
+        )
+        booleanParam(
+            name: 'DEPLOY',
+            defaultValue: false,
+            description: 'Jalankan proses deploy dan release?'
+        )
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['dev', 'staging', 'prod'],
+            description: 'Target environment'
+        )
     }
 
+    // Pengaturan umum pipeline.
     options {
+        // Hanya menyimpan tiga build terakhir.
         buildDiscarder(logRotator(numToKeepStr: '3'))
+
+        // Mencegah dua build job ini berjalan bersamaan.
         disableConcurrentBuilds()
+
+        // Menghentikan pipeline jika melebihi 10 menit.
         timeout(time: 10, unit: 'MINUTES')
+
+        // Menambahkan waktu pada setiap baris log.
         timestamps()
     }
 
     stages {
-        stage('Parameters') {
-            agent {
-                label 'jenkins-agent-01'
-            }
+        // 1. Menampilkan parameter yang dipilih pengguna.
+        stage('1 - Show Parameters') {
+            agent { label 'jenkins-agent-01' }
 
             steps {
                 echo "Hello, ${params.NAME}!"
-                echo "Description: ${params.DESCRIPTION}"
-                echo "Deploy: ${params.DEPLOY}"
-                echo "Environment: ${params.ENVIRONMENT}"
-                echo "Secret: ${params.SECRET}"
+                echo "Description : ${params.DESCRIPTION}"
+                echo "Deploy      : ${params.DEPLOY}"
+                echo "Environment : ${params.ENVIRONMENT}"
             }
         }
 
-        stage('Check Java') {
-            agent {
-                label 'jenkins-agent-01'
-            }
-
-            environment {
-                APP = credentials('riko_rahasia')
-            }
+        // 2. Memeriksa informasi Jenkins, Java, dan Maven Wrapper.
+        stage('2 - Check Environment') {
+            agent { label 'jenkins-agent-01' }
 
             steps {
                 script {
                     echo '========================================'
-                    echo 'INFORMASI GLOBAL VARIABLE JENKINS'
+                    echo 'INFORMASI PIPELINE JENKINS'
                     echo '========================================'
-
-                    echo("Author        : ${env.AUTHOR}")
-                    echo("Email         : ${env.EMAIL}")
-                    echo("Website       : ${env.WEB}")
-                    echo("Phone         : ${env.PHONE}")
-                    echo("App User   : ${APP_USR}")
-                    echo("App Password : ${APP_PSW}")
-
-                    sh '''
-                        echo "App Password : $APP_PSW" > "rahasia.txt"
-                    '''
-
-                    echo "Start Job     : ${env.JOB_NAME}"
-                    echo "Build Number  : ${env.BUILD_NUMBER}"
-                    echo "Build ID      : ${env.BUILD_ID}"
-                    echo "Build Tag     : ${env.BUILD_TAG}"
-
-                    echo '----------------------------------------'
-
-                    echo "Node Jenkins  : ${env.NODE_NAME}"
-                    echo "Label Node    : ${env.NODE_LABELS}"
-                    echo "Workspace     : ${pwd()}"
-
-                    echo '----------------------------------------'
-
-                    echo "Branch Name   : ${env.GIT_BRANCH ?: env.BRANCH_NAME ?: 'Tidak tersedia'}"
-                    echo "Git Commit    : ${env.GIT_COMMIT ?: 'Tidak tersedia'}"
-
-                    echo '----------------------------------------'
-
-                    echo "Jenkins URL   : ${env.JENKINS_URL ?: 'Tidak tersedia'}"
-                    echo "Job URL       : ${env.JOB_URL ?: 'Tidak tersedia'}"
-                    echo "Build URL     : ${env.BUILD_URL ?: 'Tidak tersedia'}"
-
-                    echo '----------------------------------------'
-
-                    echo "JAVA_HOME     : ${env.JAVA_HOME}"
-                    echo "mvnw tersedia : ${fileExists('mvnw')}"
-                    echo "pom.xml ada   : ${fileExists('pom.xml')}"
-
+                    echo "Author       : ${env.AUTHOR}"
+                    echo "Email        : ${env.EMAIL}"
+                    echo "Website      : ${env.WEB}"
+                    echo "Phone        : ${env.PHONE}"
+                    echo "Job          : ${env.JOB_NAME}"
+                    echo "Build Number : ${env.BUILD_NUMBER}"
+                    echo "Node         : ${env.NODE_NAME}"
+                    echo "Node Labels  : ${env.NODE_LABELS}"
+                    echo "Workspace    : ${pwd()}"
+                    echo "Branch       : ${env.GIT_BRANCH ?: env.BRANCH_NAME ?: 'Tidak tersedia'}"
+                    echo "Git Commit   : ${env.GIT_COMMIT ?: 'Tidak tersedia'}"
+                    echo "JAVA_HOME    : ${env.JAVA_HOME}"
+                    echo "mvnw ada     : ${fileExists('mvnw')}"
+                    echo "pom.xml ada  : ${fileExists('pom.xml')}"
                     echo '========================================'
                 }
 
+                // Menjalankan pemeriksaan langsung pada shell agent.
                 sh '''
-                    echo "Checking Java and Maven..."
+                    set -eu
 
+                    echo "Checking agent, Java, and Maven..."
                     hostname
                     whoami
                     pwd
 
-                    echo "JAVA_HOME=$JAVA_HOME"
-                    echo "PATH=$PATH"
-
+                    test -f pom.xml
+                    test -f mvnw
                     chmod +x mvnw
 
-                    "$JAVA_HOME/bin/java" -version
+                    java -version
                     ./mvnw -version
                 '''
             }
         }
 
-        stage('Clean') {
-            agent {
-                label 'jenkins-agent-01'
-            }
+        // 3. Contoh penggunaan credential bertipe Username with password.
+        stage('3 - Check Credentials') {
+            agent { label 'jenkins-agent-01' }
 
             steps {
-                script {
-                    for (int i = 0; i < 5; i++) {
-                        echo "Cleaning up... ${i + 1}"
-                        sleep 1
-                    }
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'riko_rahasia',
+                        usernameVariable: 'APP_USER',
+                        passwordVariable: 'APP_PASSWORD'
+                    )
+                ]) {
+                    // Jangan echo atau simpan password ke file/workspace.
+                    sh '''
+                        set +x
+                        test -n "$APP_USER"
+                        test -n "$APP_PASSWORD"
+                        echo "Credential berhasil dimuat dengan aman"
+                    '''
                 }
+            }
+        }
 
+        // 4. Membersihkan hasil build sebelumnya.
+        stage('4 - Clean') {
+            agent { label 'jenkins-agent-01' }
+
+            steps {
+                echo 'Membersihkan hasil build sebelumnya...'
                 sh '''
+                    set -eu
                     chmod +x mvnw
                     ./mvnw clean
                 '''
             }
         }
 
-        stage('Test') {
-            agent {
-                label 'jenkins-agent-01'
-            }
+        // 5. Membuat data contoh dan menjalankan automated test Maven.
+        stage('5 - Test') {
+            agent { label 'jenkins-agent-01' }
 
             steps {
                 script {
@@ -159,346 +183,105 @@ pipeline {
                             groovy.json.JsonOutput.toJson(data)
                         )
                     )
-
                     echo 'File data.json berhasil dibuat'
                 }
 
                 sh '''
+                    set -eu
                     chmod +x mvnw
                     ./mvnw test
                 '''
             }
         }
 
-        stage('Deploy') {
-            agent {
-                label 'jenkins-agent-01'
-            }
-
-            input {
-                message 'Are you sure to proceed to the deploy stage?'
-                ok 'Yes, continue'
-
-                parameters {
-                    choice(
-                        name: 'TARGET_ENV',
-                        choices: ['dev', 'staging', 'prod'],
-                        description: 'Environment untuk deploy'
-                    )
-                }
-            }
-
-            steps {
-                echo "Target environment for deploy: ${env.TARGET_ENV}"
-                echo "Deploy dijalankan pada node: ${env.NODE_NAME}"
-                echo 'Start deploying...'
-
-                sleep 2
-
-                echo 'Deploy completed...'
-            }
-        }
-
-        stage('Release') {
-            when {
-                beforeAgent true
-                expression { return params.DEPLOY == true }
-            }
-
-            agent {
-                label 'jenkins-agent-01'
-            }
-
-            steps {
-                echo "Release dijalankan pada node: ${env.NODE_NAME}"
-                echo "Target environment for release: ${params.TARGET_ENV}"
-                echo 'Start releasing...'
-                sleep 2
-                echo 'Release completed...'
-            }
-        }
-
-        stage('Release v2') {
-            agent {
-                label 'jenkins-agent-01'
-            }
-
-            steps {
-                withCredentials([usernamePassword(
-            credentialsId: 'eko_rahasia',
-            usernameVariable: 'RELEASE_USER',
-            passwordVariable: 'RELEASE_PASSWORD'
-        )]) {
-                    sh '''
-                set +x
-
-                echo "Credentials berhasil dimuat"
-                echo "Username dan password siap digunakan"
-                echo "Simulasi release selesai"
-            '''
-        }
-            }
-        }
-
-        stage('Cleanup') {
-            agent {
-                label 'jenkins-agent-01'
-            }
-
-            steps {
-                echo "Cleanup dijalankan pada node: ${env.NODE_NAME}"
-                echo "Target environment for cleanup: ${params.TARGET_ENV}"
-                echo 'Cleaning up 1...'
-                echo 'Cleaning up 2...'
-            }
-        }
-
-        // Materi baru: beberapa stage anak berjalan berurutan.
-        stage('Sequential Stages') {
-            agent {
-                label 'jenkins-agent-01'
-            }
+        // 6. Contoh nested stages yang berjalan berurutan.
+        stage('6 - Sequential Stages') {
+            agent { label 'jenkins-agent-01' }
 
             stages {
-                stage('Sequential 1 - Persiapan') {
+                stage('6.1 - Preparation') {
                     steps {
-                        echo "Langkah 1: Persiapan pada node ${env.NODE_NAME}"
+                        echo "Persiapan pada node ${env.NODE_NAME}"
                     }
                 }
 
-                stage('Sequential 2 - Verifikasi') {
+                stage('6.2 - Verification') {
                     steps {
-                        echo "Langkah 2: Verifikasi pada node ${env.NODE_NAME}"
+                        echo "Verifikasi pada node ${env.NODE_NAME}"
                     }
                 }
 
-                stage('Sequential 3 - Selesai') {
+                stage('6.3 - Finish') {
                     steps {
-                        echo "Langkah 3: Selesai pada node ${env.NODE_NAME}"
+                        echo 'Sequential stages selesai'
                     }
                 }
             }
         }
 
-        // Materi baru: beberapa stage dijalankan secara bersamaan.
-        stage('Parallel Stages') {
-            failFast true
+        // 7. Contoh beberapa pekerjaan yang berjalan bersamaan.
+        stage('7 - Parallel Checks') {
+            failFast true // Hentikan cabang lain jika satu cabang gagal.
 
             parallel {
-                stage('Parallel 1 - Prepare Java') {
-                    agent {
-                        label 'jenkins-agent-01'
-                    }
+                stage('7.1 - Check Java') {
+                    agent { label 'jenkins-agent-01' }
 
                     steps {
-                        echo "Prepare Java dijalankan pada node: ${env.NODE_NAME}"
-                        echo 'Memulai pengecekan Java...'
-                        sh '"$JAVA_HOME/bin/java" -version'
-                        sleep 5
-                        echo 'Prepare Java selesai'
+                        echo "Check Java pada node ${env.NODE_NAME}"
+                        sh 'java -version'
                     }
                 }
 
-                stage('Parallel 2 - Prepare Maven') {
-                    agent {
-                        label 'jenkins-agent-01'
-                    }
+                stage('7.2 - Check Maven') {
+                    agent { label 'jenkins-agent-01' }
 
                     steps {
-                        echo "Prepare Maven dijalankan pada node: ${env.NODE_NAME}"
-                        echo 'Memulai pengecekan Maven Wrapper...'
+                        echo "Check Maven pada node ${env.NODE_NAME}"
                         sh '''
+                            set -eu
                             chmod +x mvnw
                             ./mvnw -version
                         '''
-                        sleep 5
-                        echo 'Prepare Maven selesai'
                     }
                 }
 
-                stage('Parallel 3 - Check Project') {
-                    agent {
-                        label 'jenkins-agent-01'
-                    }
+                stage('7.3 - Check Project Files') {
+                    agent { label 'jenkins-agent-01' }
 
                     steps {
-                        echo "Check Project dijalankan pada node: ${env.NODE_NAME}"
-
                         script {
-                            echo "pom.xml tersedia   : ${fileExists('pom.xml')}"
-                            echo "mvnw tersedia      : ${fileExists('mvnw')}"
-                            echo "data.json tersedia : ${fileExists('data.json')}"
-                        }
-
-                        sleep 5
-                        echo 'Check Project selesai'
-                    }
-                }
-            }
-        }
-
-        stage('Matrix Testing') {
-            matrix {
-                axes {
-                    axis {
-                        name 'MATRIX_ENV'
-                        values 'dev', 'staging'
-                    }
-
-                    axis {
-                        name 'TEST_TYPE'
-                        values 'unit', 'api'
-                    }
-                }
-
-                agent {
-                    label 'jenkins-agent-01'
-                }
-
-                stages {
-                    stage('Preparation') {
-                        steps {
-                            echo 'Melakukan persiapan'
-                        }
-                    }
-
-                    stage('Execution') {
-                        steps {
-                            echo 'Menjalankan pengujian'
+                            echo "pom.xml ada   : ${fileExists('pom.xml')}"
+                            echo "mvnw ada      : ${fileExists('mvnw')}"
+                            echo "data.json ada : ${fileExists('data.json')}"
                         }
                     }
                 }
             }
         }
 
-        stage('Simple Matrix Test') {
+        // 8. Matrix membuat kombinasi TEST_TYPE x TARGET_ENV.
+        // Total awal: 3 x 2 = 6 kombinasi, lalu 1 kombinasi dikecualikan.
+        stage('8 - Matrix Testing') {
             matrix {
                 axes {
                     axis {
                         name 'TEST_TYPE'
                         values 'unit', 'integration', 'api'
                     }
-                }
-
-                agent {
-                    label 'jenkins-agent-01'
-                }
-
-                stages {
-                    stage('Show Matrix Cell') {
-                        steps {
-                            echo '========================================'
-                            echo "Jenis test : ${TEST_TYPE}"
-                            echo "Node       : ${env.NODE_NAME}"
-                            echo "Workspace  : ${env.WORKSPACE}"
-                            echo '========================================'
-                        }
-                    }
-
-                    stage('Run Test') {
-                        steps {
-                            echo "Menjalankan ${TEST_TYPE} test..."
-                            sleep 2
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Matrix Java Version Test') {
-            matrix {
-                axes {
-                    axis {
-                        name 'TEST_TYPE'
-                        values 'unit', 'api'
-                    }
-
-                    axis {
-                        name 'JAVA_VERSION'
-                        values '11', '17'
-                    }
-                }
-
-                agent {
-                    label 'jenkins-agent-01'
-                }
-
-                stages {
-                    stage('Show Configuration') {
-                        steps {
-                            echo '========================================'
-                            echo "Test Type    : ${TEST_TYPE}"
-                            echo "Java Version : ${JAVA_VERSION}"
-                            echo "Node         : ${env.NODE_NAME}"
-                            echo '========================================'
-                        }
-                    }
-
-                    stage('Execute Test') {
-                        steps {
-                            echo "Menjalankan ${TEST_TYPE} menggunakan Java ${JAVA_VERSION}"
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Matrix Build') {
-            matrix {
-                axes {
-                    axis {
-                        name 'TEST_TYPE'
-                        values 'unit', 'api'
-                    }
-                }
-
-                agent {
-                    label 'jenkins-agent-01'
-                }
-
-                stages {
-                    stage('Preparation') {
-                        steps {
-                            echo "Persiapan ${TEST_TYPE}"
-                        }
-                    }
-
-                    stage('Testing') {
-                        steps {
-                            echo "Menjalankan ${TEST_TYPE}"
-                        }
-                    }
-
-                    stage('Report') {
-                        steps {
-                            echo "Membuat laporan ${TEST_TYPE}"
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Matrix Environment Test') {
-            matrix {
-                axes {
-                    axis {
-                        name 'TEST_TYPE'
-                        values 'unit', 'integration', 'api'
-                    }
-
                     axis {
                         name 'TARGET_ENV'
                         values 'dev', 'staging'
                     }
                 }
 
+                // Integration test pada dev tidak dijalankan.
                 excludes {
                     exclude {
                         axis {
                             name 'TEST_TYPE'
                             values 'integration'
                         }
-
                         axis {
                             name 'TARGET_ENV'
                             values 'dev'
@@ -506,35 +289,74 @@ pipeline {
                     }
                 }
 
-                agent {
-                    label 'jenkins-agent-01'
-                }
+                agent { label 'jenkins-agent-01' }
 
                 stages {
-                    stage('Show Matrix Cell') {
+                    stage('8.1 - Show Matrix Cell') {
                         steps {
-                            echo '========================================'
-                            echo "Jenis Test  : ${TEST_TYPE}"
+                            echo "Test        : ${TEST_TYPE}"
                             echo "Environment : ${TARGET_ENV}"
                             echo "Node        : ${env.NODE_NAME}"
-                            echo '========================================'
                         }
                     }
 
-                    stage('Run Test') {
+                    stage('8.2 - Execute Matrix Test') {
                         steps {
+                            // Masih berupa simulasi pembelajaran.
+                            // Ganti echo dengan command test yang sebenarnya.
                             echo "Menjalankan ${TEST_TYPE} test pada ${TARGET_ENV}"
-                            sleep 2
+                        }
+                    }
+
+                    stage('8.3 - Create Report') {
+                        steps {
+                            echo "Membuat laporan ${TEST_TYPE} untuk ${TARGET_ENV}"
                         }
                     }
                 }
             }
         }
+
+        // 9. Deploy hanya muncul jika parameter DEPLOY dicentang.
+        stage('9 - Deploy') {
+            when {
+                beforeAgent true
+                expression { params.DEPLOY }
+            }
+
+            agent { label 'jenkins-agent-01' }
+
+            // Meminta konfirmasi manual sebelum steps dijalankan.
+            input {
+                message "Deploy ke ${params.ENVIRONMENT}?"
+                ok 'Ya, lanjutkan'
+            }
+
+            steps {
+                echo "Deploy ke ${params.ENVIRONMENT} pada ${env.NODE_NAME}"
+                echo 'Deploy selesai (simulasi)'
+            }
+        }
+
+        // 10. Release dijalankan setelah Deploy dan memakai target yang sama.
+        stage('10 - Release') {
+            when {
+                beforeAgent true
+                expression { params.DEPLOY }
+            }
+
+            agent { label 'jenkins-agent-01' }
+
+            steps {
+                echo "Release ke ${params.ENVIRONMENT} pada ${env.NODE_NAME}"
+                echo 'Release selesai (simulasi)'
+            }
+        }
     }
 
+    // Aksi penutup berdasarkan hasil pipeline.
     post {
         always {
-            echo 'This will always run'
             echo "Status akhir: ${currentBuild.currentResult}"
         }
 
@@ -551,7 +373,7 @@ pipeline {
         }
 
         unstable {
-            echo 'Pipeline selesai tetapi statusnya unstable'
+            echo 'Pipeline selesai dengan status unstable'
         }
 
         changed {
