@@ -19,6 +19,9 @@ pipeline {
 
         UNSAFE_APP_USER     = 'demo-user'
         UNSAFE_APP_PASSWORD = 'demo-password'
+
+        // Diisi setelah pengguna memilih environment pada stage Deploy.
+        SELECTED_DEPLOY_ENV = ''
     }
 
     // Pemicu otomatis pipeline.
@@ -341,14 +344,27 @@ pipeline {
 
             agent { label 'jenkins-agent-01' }
 
-            // Meminta konfirmasi manual sebelum steps dijalankan.
+            // Meminta konfirmasi sekaligus memilih target deployment.
             input {
-                message "Deploy ke ${params.ENVIRONMENT}?"
+                message 'Pilih environment tujuan deployment'
                 ok 'Ya, lanjutkan'
+
+                parameters {
+                    choice(
+                        name: 'DEPLOY_ENV',
+                        choices: ['Dev', 'Staging (QA)', 'Prod'],
+                        description: 'Environment tujuan deployment'
+                    )
+                }
             }
 
             steps {
-                echo "Deploy ke ${params.ENVIRONMENT} pada ${env.NODE_NAME}"
+                script {
+                    // Menyimpan pilihan agar dapat digunakan stage Release.
+                    env.SELECTED_DEPLOY_ENV = env.DEPLOY_ENV
+                }
+
+                echo "Deploy ke ${env.SELECTED_DEPLOY_ENV} pada ${env.NODE_NAME}"
                 echo 'Deploy selesai (simulasi)'
             }
         }
@@ -363,7 +379,7 @@ pipeline {
             agent { label 'jenkins-agent-01' }
 
             steps {
-                echo "Release ke ${params.ENVIRONMENT} pada ${env.NODE_NAME}"
+                echo "Release ke ${env.SELECTED_DEPLOY_ENV} pada ${env.NODE_NAME}"
                 echo 'Release selesai (simulasi)'
             }
         }
