@@ -381,7 +381,7 @@ pipeline {
             }
         }
 
-        stage('Matrix Test') {
+        stage('Matrix Java Version Test') {
             matrix {
                 axes {
                     axis {
@@ -454,7 +454,7 @@ pipeline {
             }
         }
 
-        stage('Matrix Test') {
+        stage('Matrix Environment Test') {
             matrix {
                 axes {
                     axis {
