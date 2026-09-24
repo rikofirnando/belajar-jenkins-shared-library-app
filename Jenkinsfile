@@ -13,4 +13,13 @@ pipeline {
             }
         }
     }
+
+    stages {
+        stage('Global Variable') {
+            steps {
+                echo(author.name())
+                echo(author.email())
+            }
+        }
+    }
 }
