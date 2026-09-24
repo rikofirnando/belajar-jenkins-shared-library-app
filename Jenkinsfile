@@ -1,12 +1,14 @@
 @Library('belajar-jenkins-shared-library@main') _
 
+import cilestri.jenkins.Output
+
 pipeline {
     agent any
     stages {
-        stage('Hello, World!') {
+        stage('Hello Groovy') {
             steps {
                 script {
-                    hello.world()
+                    Output.hello('Groovy')
                 }
             }
         }
