@@ -7,14 +7,10 @@ pipeline {
     stages {
         stage('Hello Groovy') {
             steps {
-                script {
-                    Output.hello(this, 'Groovy')
-                }
+                Output.hello('Groovy')
             }
         }
-    }
 
-    stages {
         stage('Global Variable') {
             steps {
                 echo(author.name())
