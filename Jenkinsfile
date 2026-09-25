@@ -1,3 +1,5 @@
 @Library('belajar-jenkins-shared-library@main') _
 
-mavenPipeline()
+cilestriPipeline([
+    type: 'maven'
+])
