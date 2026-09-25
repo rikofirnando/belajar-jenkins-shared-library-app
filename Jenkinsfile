@@ -13,6 +13,17 @@ pipeline {
             }
         }
 
+        stage('Hello Persons') {
+            steps {
+                script {
+                    hello.person([
+                        firstName: 'Riko',
+                        lastName: 'Firnando'
+                    ])
+                }
+            }
+        }
+
         stage('Global Variable') {
             steps {
                 script {
