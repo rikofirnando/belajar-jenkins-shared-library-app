@@ -27,6 +27,7 @@ pipeline {
             steps {
                 script {
                     maven('clean compile')
+                    maven(['clean', 'compile', 'test'])
                 }
             }
         }
