@@ -1,5 +1,6 @@
-@Library('belajar-jenkins-shared-library@main') _
+@Library('belajar-jenkins-shared-library') _
 
-cilestriPipeline([
-    type: 'maven'
-])
+cilestriPipeline(
+    type: 'maven',
+    commands: ['clean', 'compile', 'test']
+)
