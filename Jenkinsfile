@@ -1,6 +1,8 @@
 @Library('belajar-jenkins-shared-library@main') _
 import cilestri.jenkins.Output
 
+mavenPipeline()
+
 pipeline {
     agent any
 
